@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
@@ -38,6 +37,13 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Copy } from 'lucide-react';
 
 // Mock document data
 const documentDetails = {
@@ -65,7 +71,7 @@ const documentDetails = {
     {
       id: 's2',
       type: 'text',
-      content: 'React is a JavaScript library for building user interfaces. It's maintained by Facebook and a community of individual developers and companies. React can be used as a base in the development of single-page or mobile applications.',
+      content: 'React is a JavaScript library for building user interfaces. It\'s maintained by Facebook and a community of individual developers and companies. React can be used as a base in the development of single-page or mobile applications.',
     },
     {
       id: 's3',
@@ -75,7 +81,7 @@ const documentDetails = {
     {
       id: 's4',
       type: 'text',
-      content: 'Before you start, make sure you have Node.js installed on your machine. You can check if Node is installed by running node -v in your terminal. If it's not installed, download and install it from the official website.',
+      content: 'Before you start, make sure you have Node.js installed on your machine. You can check if Node is installed by running node -v in your terminal. If it\'s not installed, download and install it from the official website.',
     },
     {
       id: 's5',
@@ -91,7 +97,7 @@ const documentDetails = {
     {
       id: 's7',
       type: 'text',
-      content: 'React components are the building blocks of React applications. A component is a self-contained module that renders some output. We'll start by creating a simple functional component.',
+      content: 'React components are the building blocks of React applications. A component is a self-contained module that renders some output. We\'ll start by creating a simple functional component.',
     },
     {
       id: 's8',
@@ -124,7 +130,7 @@ const documentDetails = {
       id: 's13',
       type: 'code',
       language: 'jsx',
-      content: 'import React, { useState } from \'react\';\n\nfunction Counter() {\n  // Declare a new state variable, which we\'ll call "count"\n  const [count, setCount] = useState(0);\n\n  return (\n    <div>\n      <p>You clicked {count} times</p>\n      <button onClick={() => setCount(count + 1)}>\n        Click me\n      </button>\n    </div>\n  );\n}',
+      content: 'import React, { useState } from \'react\';\n\nfunction Counter() {\n  // Declare a new state variable, which we\\\'ll call "count"\n  const [count, setCount] = useState(0);\n\n  return (\n    <div>\n      <p>You clicked {count} times</p>\n      <button onClick={() => setCount(count + 1)}>\n        Click me\n      </button>\n    </div>\n  );\n}',
     },
   ],
   versions: [
