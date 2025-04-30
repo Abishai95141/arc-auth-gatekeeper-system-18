@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -24,21 +24,22 @@ const AdminDashboardPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    const fetchPendingUsers = async () => {
-      setIsLoading(true);
-      try {
-        const users = await getAllPendingUsers();
-        setPendingUsers(users);
-      } catch (error) {
-        console.error('Error fetching pending users:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchPendingUsers();
+  const fetchPendingUsers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const users = await getAllPendingUsers();
+      setPendingUsers(users);
+      console.log("Fetched pending users:", users);
+    } catch (error) {
+      console.error('Error fetching pending users:', error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchPendingUsers();
+  }, [fetchPendingUsers]);
 
   const handleViewUser = (user: User) => {
     setSelectedUser(user);
@@ -91,6 +92,10 @@ const AdminDashboardPage: React.FC = () => {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    fetchPendingUsers();
   };
 
   const renderStatusBadge = (status: string) => {
@@ -242,6 +247,7 @@ const AdminDashboardPage: React.FC = () => {
               <Button 
                 variant="outline" 
                 size="sm"
+                onClick={handleRefresh}
                 className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
               >
                 <RefreshCw size={16} className="mr-2" />
