@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,7 +20,7 @@ const signupSchema = z.object({
   educationLevel: z.string().optional(),
   githubUrl: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal('')),
   linkedinUrl: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal('')),
-  age: z.string().transform(val => val ? parseInt(val, 10) : undefined).optional(),
+  age: z.string().optional(), // Keep age as string in the form schema
   gender: z.string().optional(),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -57,7 +56,7 @@ const SignupPage: React.FC = () => {
       educationLevel: "",
       githubUrl: "",
       linkedinUrl: "",
-      age: "",
+      age: "", // Age as string in form
       gender: "",
     },
   });
@@ -97,7 +96,7 @@ const SignupPage: React.FC = () => {
               educationLevel: signupData.educationLevel,
               githubUrl: signupData.githubUrl,
               linkedinUrl: signupData.linkedinUrl,
-              age: signupData.age ? parseInt(signupData.age, 10) : undefined,
+              age: signupData.age && signupData.age !== "" ? parseInt(signupData.age, 10) : undefined,
               gender: signupData.gender
             };
             
