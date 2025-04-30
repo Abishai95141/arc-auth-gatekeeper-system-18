@@ -115,14 +115,14 @@ export async function loginUser(credentials: UserCredentials): Promise<{ user: U
         const user: User = {
           id: profileData.id,
           fullName: profileData.full_name,
-          email: profileData.email,
-          age: profileData.age,
-          gender: profileData.gender,
-          department: profileData.department,
-          educationLevel: profileData.education_level,
-          githubUrl: profileData.github_url,
-          linkedinUrl: profileData.linkedin_url,
-          status: profileData.status,
+          email: profileData.email || data.user.email || '',
+          age: profileData.age || 0,
+          gender: profileData.gender || '',
+          department: profileData.department || '',
+          educationLevel: profileData.education_level || profileData.education || '',
+          githubUrl: profileData.github_url || '',
+          linkedinUrl: profileData.linkedin_url || '',
+          status: profileData.status as UserStatus || 'approved',
           createdAt: new Date(profileData.created_at),
         };
         
@@ -140,22 +140,23 @@ export async function loginUser(credentials: UserCredentials): Promise<{ user: U
 // Admin Login
 export async function loginAdmin(credentials: UserCredentials): Promise<Admin> {
   try {
-    // Check admin credentials in the admins table
+    // Use raw SQL query since admins table is not in generated types
     const { data, error } = await supabase
-      .from('admins')
-      .select('*')
-      .eq('email', credentials.email)
-      .eq('password', credentials.password) // In a real app, we'd compare hashed passwords
-      .single();
+      .rpc('admin_login', { 
+        admin_email: credentials.email, 
+        admin_password: credentials.password 
+      });
     
-    if (error || !data) {
+    if (error || !data || data.length === 0) {
       throw new Error('Invalid admin credentials. Please try again.');
     }
     
+    const adminData = data[0];
+    
     const admin: Admin = {
-      id: data.id,
-      email: data.email,
-      name: data.name
+      id: adminData.id,
+      email: adminData.email,
+      name: adminData.name
     };
     
     return admin;
@@ -182,7 +183,7 @@ export async function getAllPendingUsers(): Promise<User[]> {
       age: item.age,
       gender: item.gender,
       department: item.department,
-      educationLevel: item.education_level,
+      educationLevel: item.education_level || item.education || '',
       githubUrl: item.github_url,
       linkedinUrl: item.linkedin_url,
       status: item.status,
@@ -211,7 +212,7 @@ export async function getAllUsers(): Promise<User[]> {
       age: item.age,
       gender: item.gender,
       department: item.department,
-      educationLevel: item.education_level,
+      educationLevel: item.education_level || item.education || '',
       githubUrl: item.github_url,
       linkedinUrl: item.linkedin_url,
       status: item.status,
@@ -245,15 +246,16 @@ export async function approveUser(userId: string): Promise<User> {
       .eq('id', userId);
     
     if (updateError) throw updateError;
+
+    // Call edge function to create the user
+    const { data, error: functionError } = await supabase.functions.invoke(
+      'approveUser',
+      {
+        body: { userId: userId, userEmail: userData.email, userPassword: userData.password }
+      }
+    );
     
-    // Create the authenticated user in Supabase auth
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: userData.email,
-      password: userData.password,
-      email_confirm: true
-    });
-    
-    if (authError) throw authError;
+    if (functionError) throw functionError;
     
     const user: User = {
       id: userData.id,
@@ -262,7 +264,7 @@ export async function approveUser(userId: string): Promise<User> {
       age: userData.age,
       gender: userData.gender,
       department: userData.department,
-      educationLevel: userData.education_level,
+      educationLevel: userData.education_level || userData.education || '',
       githubUrl: userData.github_url,
       linkedinUrl: userData.linkedin_url,
       status: 'approved',
@@ -308,7 +310,7 @@ export async function rejectUser(userId: string): Promise<User> {
       age: userData.age,
       gender: userData.gender,
       department: userData.department,
-      educationLevel: userData.education_level,
+      educationLevel: userData.education_level || userData.education || '',
       githubUrl: userData.github_url,
       linkedinUrl: userData.linkedin_url,
       status: 'rejected',
