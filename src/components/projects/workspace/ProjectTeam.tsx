@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -66,7 +65,7 @@ const ProjectTeam: React.FC<ProjectTeamProps> = ({ team, isTeamLead }) => {
     setTimeout(() => {
       setMessages(prev => [...prev, {
         sender: members[0].name,
-        content: 'Thanks for your message! I'll check this out soon.',
+        content: "Thanks for your message! I'll check this out soon.",
         timestamp: new Date()
       }]);
     }, 1500);
