@@ -10,7 +10,15 @@ interface AuthLayoutProps {
 
 export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, description }) => {
   return (
-    <div className="auth-container">
+    <div 
+      className="auth-container" 
+      style={{
+        backgroundImage: "url('/lovable-uploads/64e151b4-922b-4077-970d-e8e8d73e48c7.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat"
+      }}
+    >
       <div className="auth-card">
         <div className="auth-header">
           <Logo className="auth-logo" />
