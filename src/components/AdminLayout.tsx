@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import Logo from './Logo';
-import { Menu, X, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Menu, X, User, LayoutDashboard, UserCheck, Users, Flag, BarChart } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { getAllPendingUsers } from '@/services/database';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -14,9 +16,29 @@ interface AdminLayoutProps {
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
   const { logout, admin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const location = useLocation();
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
+  
+  // Fetch pending count on mount
+  React.useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const pendingUsers = await getAllPendingUsers();
+        setPendingCount(pendingUsers.length);
+      } catch (error) {
+        console.error('Error fetching pending count:', error);
+      }
+    };
+    
+    fetchPendingCount();
+  }, []);
   
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
+  };
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
   
   return (
@@ -28,24 +50,53 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => 
         </div>
         
         <nav className="space-y-1">
-          <a 
-            href="/admin" 
-            className="flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10 transition-all duration-200"
+          <Link 
+            to="/admin" 
+            className={`flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10 transition-all duration-200 ${isActive('/admin') ? 'bg-white/20' : ''}`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h2" />
-            </svg>
+            <LayoutDashboard className="h-4 w-4" />
             <span>Dashboard</span>
-          </a>
-          <a 
-            href="/admin/users" 
-            className="flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10 transition-all duration-200"
+          </Link>
+          
+          <Link 
+            to="/admin/signup-requests" 
+            className={`flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10 transition-all duration-200 ${isActive('/admin/signup-requests') ? 'bg-white/20' : ''}`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            <span>All Users</span>
-          </a>
+            <UserCheck className="h-4 w-4" />
+            <span>Signup Requests</span>
+            {pendingCount !== null && pendingCount > 0 && (
+              <Badge variant="outline" className="ml-auto bg-purple-500 text-white border-none">
+                {pendingCount}
+              </Badge>
+            )}
+          </Link>
+          
+          <Link 
+            to="/admin/users" 
+            className={`flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10 transition-all duration-200 ${isActive('/admin/users') ? 'bg-white/20' : ''}`}
+          >
+            <Users className="h-4 w-4" />
+            <span>User Management</span>
+          </Link>
+          
+          <Link 
+            to="/admin/moderation" 
+            className={`flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10 transition-all duration-200 ${isActive('/admin/moderation') ? 'bg-white/20' : ''}`}
+          >
+            <Flag className="h-4 w-4" />
+            <span>Content Moderation</span>
+            <Badge variant="outline" className="ml-auto bg-red-500 text-white border-none">
+              7
+            </Badge>
+          </Link>
+          
+          <Link 
+            to="/admin/analytics" 
+            className={`flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10 transition-all duration-200 ${isActive('/admin/analytics') ? 'bg-white/20' : ''}`}
+          >
+            <BarChart className="h-4 w-4" />
+            <span>Analytics</span>
+          </Link>
         </nav>
         
         <div className="mt-auto pt-6">

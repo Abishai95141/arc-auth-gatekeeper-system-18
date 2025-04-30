@@ -18,7 +18,11 @@ import DashboardPage from "./pages/DashboardPage";
 import ProfilePage from "./pages/ProfilePage";
 
 // Admin Pages
-import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminHomePage from "./pages/admin/AdminHomePage";
+import SignupRequestsPage from "./pages/admin/SignupRequestsPage";
+import UsersManagementPage from "./pages/admin/UsersManagementPage";
+import ModerationPage from "./pages/admin/ModerationPage";
+import AnalyticsPage from "./pages/admin/AnalyticsPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 
 // Other Pages
@@ -116,8 +120,12 @@ const App = () => (
             
             {/* Protected Admin Routes */}
             <Route element={<AdminProtectedRoute />}>
-              <Route path="/admin" element={<AdminDashboardPage />} />
-              <Route path="/admin/users" element={<AdminUsersPage />} />
+              <Route path="/admin" element={<AdminHomePage />} />
+              <Route path="/admin/signup-requests" element={<SignupRequestsPage />} />
+              <Route path="/admin/users" element={<UsersManagementPage />} />
+              <Route path="/admin/moderation" element={<ModerationPage />} />
+              <Route path="/admin/analytics" element={<AnalyticsPage />} />
+              <Route path="/admin/users-old" element={<AdminUsersPage />} />
             </Route>
             
             {/* Catch-all Route */}
