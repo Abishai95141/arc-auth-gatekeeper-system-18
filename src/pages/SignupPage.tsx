@@ -54,7 +54,16 @@ const SignupPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const signupData: SignupFormData = {
-        ...values
+        fullName: values.fullName,
+        email: values.email,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+        age: values.age || 0, // Provide default value to ensure it's not undefined
+        gender: values.gender,
+        department: values.department,
+        educationLevel: values.educationLevel,
+        githubUrl: values.githubUrl,
+        linkedinUrl: values.linkedinUrl
       };
       await signupUser(signupData);
       toast.success("Sign up request submitted successfully!");
