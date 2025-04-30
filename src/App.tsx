@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +15,7 @@ import AdminLoginPage from "./pages/AdminLoginPage";
 
 // User Pages
 import DashboardPage from "./pages/DashboardPage";
+import ProfilePage from "./pages/ProfilePage";
 
 // Admin Pages
 import AdminDashboardPage from "./pages/AdminDashboardPage";
@@ -47,6 +49,7 @@ const App = () => (
             {/* Protected User Routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
             </Route>
             
             {/* Protected Admin Routes */}

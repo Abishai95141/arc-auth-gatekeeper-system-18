@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import Logo from '@/components/Logo';
+import { Link } from 'react-router-dom';
+import { User } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -21,13 +23,24 @@ const DashboardPage: React.FC = () => {
             <h1 className="text-xl font-bold text-white">Builders Arc</h1>
           </div>
           
-          <Button 
-            variant="outline" 
-            className="border-arc-accent/30 text-white hover:bg-arc-accent/20 hover:text-white transition-all duration-200"
-            onClick={logout}
-          >
-            Log Out
-          </Button>
+          <div className="flex items-center gap-3">
+            <Link to="/profile">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 bg-gradient-to-r from-arc-secondary/40 to-arc-accent/40 text-white hover:from-arc-secondary hover:to-arc-accent hover:scale-[1.02] transition-all duration-200"
+              >
+                <User size={18} />
+                Profile
+              </Button>
+            </Link>
+            <Button 
+              variant="outline" 
+              className="border-arc-accent/30 text-white hover:bg-arc-accent/20 hover:text-white transition-all duration-200"
+              onClick={logout}
+            >
+              Log Out
+            </Button>
+          </div>
         </header>
 
         <div className="mb-8 grid gap-6 md:grid-cols-3">

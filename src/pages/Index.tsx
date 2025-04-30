@@ -37,7 +37,7 @@ const Index = () => {
         <section className="bg-gradient-to-b from-transparent via-black/40 to-black/60 py-20 text-center">
           <div className="container px-4 animate-fade-in">
             <h1 className="mb-6 text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
-              Join Our Community of <span className="text-arc-accent">Tech Builders</span>
+              <span className="text-arc-accent">Builders Arc</span>
             </h1>
             <p className="mx-auto mb-10 max-w-2xl text-lg text-gray-300 sm:text-xl">
               Connect with tech enthusiasts, collaborate on projects, and grow your skills in our curated community.

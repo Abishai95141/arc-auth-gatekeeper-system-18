@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import Logo from './Logo';
+import { Menu, X, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -11,10 +13,15 @@ interface AdminLayoutProps {
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
   const { logout, admin } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
   
   return (
     <div className="admin-layout">
-      <div className="admin-sidebar">
+      <div className={`admin-sidebar transition-all duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center space-x-2 pb-6">
           <Logo className="h-8 w-8" />
           <span className="text-lg font-bold">Builders Arc</span>
@@ -56,9 +63,31 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => 
         </div>
       </div>
       
-      <div className="admin-content">
+      <div className={`admin-content transition-all duration-300 ease-in-out ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
         <div className="admin-header">
-          <h1 className="text-2xl font-bold">{title}</h1>
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={toggleSidebar} 
+              className="bg-gradient-to-r from-arc-secondary to-arc-accent text-white hover:from-arc-accent hover:to-arc-light hover:scale-[1.02] transition-all duration-200"
+              aria-label="Toggle sidebar"
+            >
+              {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+            </Button>
+            <h1 className="text-2xl font-bold">{title}</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link to="/profile">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 bg-gradient-to-r from-arc-secondary/40 to-arc-accent/40 text-white hover:from-arc-secondary hover:to-arc-accent hover:scale-[1.02] transition-all duration-200"
+              >
+                <User size={18} />
+                Profile
+              </Button>
+            </Link>
+          </div>
         </div>
         
         {children}
