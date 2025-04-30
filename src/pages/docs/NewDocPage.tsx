@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Plus, ChevronDown, Image, Code, FileText, X, Trash, 
   Bold, Italic, Underline, Link as LinkIcon, List, ListOrdered, 
-  Save, Eye, Clock, Users, Tag
+  Save, Eye, Clock, Users, Tag, Check 
 } from 'lucide-react';
 import AppLayout from '@/components/AppLayout';
 import { useToast } from "@/hooks/use-toast";
@@ -130,7 +129,8 @@ const NewDocPage: React.FC = () => {
       block.id === blockId ? { ...block, content } : block
     ));
     
-    if (block.type === 'heading' && block.level === 1) {
+    const currentBlock = blocks.find(block => block.id === blockId);
+    if (currentBlock && currentBlock.type === 'heading' && currentBlock.level === 1) {
       setTitle(content);
     }
     

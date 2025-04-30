@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
-  FileText, Clock, Star, MessageSquare, Share, Eye, Download, Fork, 
-  Mail, ChevronRight, ChevronLeft, BookmarkPlus, Edit, ThumbsUp, ThumbsDown
+  FileText, Clock, Star, MessageSquare, Share, Eye, Download, 
+  Mail, ChevronRight, ChevronLeft, BookmarkPlus, Edit, ThumbsUp, ThumbsDown, Copy
 } from 'lucide-react';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Copy } from 'lucide-react';
 
 // Mock document data
 const documentDetails = {
@@ -384,7 +383,7 @@ const DocDetailPage: React.FC = () => {
             
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm">
-                <Fork size={16} className="mr-1" /> Fork
+                <BookmarkPlus size={16} className="mr-1" /> Fork
               </Button>
               <Button variant="outline" size="sm">
                 <Mail size={16} className="mr-1" /> Request Review
