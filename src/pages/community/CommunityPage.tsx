@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Users, Globe, Filter, X, UserPlus, MessageSquare, Mail } from 'lucide-react';
+import { Search, Users, Globe, Filter, X, UserPlus, MessageSquare, Mail, Plus } from 'lucide-react';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
