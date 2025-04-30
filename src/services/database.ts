@@ -92,12 +92,12 @@ export const loginUser = async (credentials: UserCredentials): Promise<{ user: U
 };
 
 export const loginAdmin = async (credentials: UserCredentials): Promise<Admin> => {
-  // For development, just return a mock admin
-  if (credentials.email === 'admin@example.com' && credentials.password === 'admin') {
+  // Updated to use the new admin credentials
+  if (credentials.email === 'abishaioff@gmail.com' && credentials.password === 'Abi@2925') {
     return {
       id: 'admin1',
       email: credentials.email,
-      fullName: 'Admin User',
+      fullName: 'Abishai Administrator',
       role: 'Admin',
       lastLogin: new Date().toISOString()
     };

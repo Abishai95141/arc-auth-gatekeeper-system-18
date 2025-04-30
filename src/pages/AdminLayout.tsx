@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import Logo from './Logo';
+import Logo from '@/components/Logo';
 import { 
   Menu, X, User, LayoutDashboard, Users, Flag, 
   Lightbulb, FolderGit2, FileText, Calendar, 

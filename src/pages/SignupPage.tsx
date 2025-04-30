@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -9,72 +8,70 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { signupUser, SignupFormData } from '@/services/database';
-import AuthLayout from '@/components/AuthLayout';
 import { toast } from "@/components/ui/sonner";
+import AuthLayout from '@/components/AuthLayout';
 
 const signupSchema = z.object({
-  fullName: z.string().min(2, { message: "Full name must be at least 2 characters" }),
   email: z.string().email({ message: "Please enter a valid email" }),
   password: z.string().min(8, { message: "Password must be at least 8 characters" }),
   confirmPassword: z.string(),
-  age: z.coerce.number().min(16, { message: "You must be at least 16 years old" }),
-  gender: z.string().min(1, { message: "Please select a gender" }),
-  department: z.string().min(1, { message: "Please enter your department or field of study" }),
-  educationLevel: z.string().min(1, { message: "Please select your highest education level" }),
-  githubUrl: z.string().url({ message: "Please enter a valid GitHub URL" }),
-  linkedinUrl: z.string().url({ message: "Please enter a valid LinkedIn URL" }),
-}).refine((data) => data.password === data.confirmPassword, {
+  fullName: z.string().min(2, { message: "Full name is required" }),
+  department: z.string().optional(),
+  educationLevel: z.string().optional(),
+  githubUrl: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal('')),
+  linkedinUrl: z.string().url({ message: "Please enter a valid URL" }).optional().or(z.literal('')),
+  age: z.string().transform(val => val ? parseInt(val, 10) : undefined).optional(),
+  gender: z.string().optional(),
+}).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 
+const departments = [
+  "Engineering", "Design", "Product", "Marketing", "Sales", "Customer Support", "HR", "Finance", "Other"
+];
+
+const educationLevels = [
+  "High School", "Associate's", "Bachelor's", "Master's", "PhD", "Self-taught", "Bootcamp", "Other"
+];
+
+const genders = [
+  "Male", "Female", "Non-binary", "Prefer not to say"
+];
+
 const SignupPage: React.FC = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
   
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
-      age: undefined,
-      gender: "",
+      fullName: "",
       department: "",
       educationLevel: "",
       githubUrl: "",
       linkedinUrl: "",
+      age: "",
+      gender: "",
     },
   });
 
-  const onSubmit = async (values: SignupFormValues) => {
+  const handleSignup = async (data: SignupFormData) => {
     setIsSubmitting(true);
     try {
-      const signupData: SignupFormData = {
-        fullName: values.fullName,
-        email: values.email,
-        password: values.password,
-        confirmPassword: values.confirmPassword,
-        age: values.age || 0, // Provide default value to ensure it's not undefined
-        gender: values.gender,
-        department: values.department,
-        educationLevel: values.educationLevel,
-        githubUrl: values.githubUrl,
-        linkedinUrl: values.linkedinUrl
-      };
-      await signupUser(signupData);
-      toast.success("Sign up request submitted successfully!");
+      await signupUser(data);
       navigate('/signup-success');
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        toast.error("An unexpected error occurred");
+        toast.error('An unknown error occurred');
       }
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -82,189 +79,252 @@ const SignupPage: React.FC = () => {
   return (
     <AuthLayout
       title="Join Builders Arc"
-      description="Create an account to join our tech community"
+      description="Create your account to start collaborating"
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="fullName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="you@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <form 
+          onSubmit={form.handleSubmit(async (data) => {
+            // Remove confirmPassword before sending to API
+            const { confirmPassword, ...signupData } = data;
+            await handleSignup(signupData);
+          })} 
+          className="space-y-4"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white/90">Email</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="you@example.com" 
+                      {...field} 
+                      className="bg-black/50 border border-arc-accent/30 text-white placeholder:text-gray-500"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-300" />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white/90">Full Name</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="John Doe" 
+                      {...field} 
+                      className="bg-black/50 border border-arc-accent/30 text-white placeholder:text-gray-500"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-300" />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel className="text-white/90">Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <Input 
+                      type="password" 
+                      placeholder="••••••••" 
+                      {...field}
+                      className="bg-black/50 border border-arc-accent/30 text-white placeholder:text-gray-500"
+                    />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-red-300" />
                 </FormItem>
               )}
             />
-
+            
             <FormField
               control={form.control}
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
+                  <FormLabel className="text-white/90">Confirm Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <Input 
+                      type="password" 
+                      placeholder="••••••••" 
+                      {...field}
+                      className="bg-black/50 border border-arc-accent/30 text-white placeholder:text-gray-500"
+                    />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-red-300" />
                 </FormItem>
               )}
             />
           </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="department"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white/90">Department</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="bg-black/50 border border-arc-accent/30 text-white">
+                        <SelectValue placeholder="Select department" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-gray-800 border border-arc-accent/30 text-white">
+                      {departments.map((dept) => (
+                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-red-300" />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="educationLevel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white/90">Education Level</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="bg-black/50 border border-arc-accent/30 text-white">
+                        <SelectValue placeholder="Select education level" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-gray-800 border border-arc-accent/30 text-white">
+                      {educationLevels.map((level) => (
+                        <SelectItem key={level} value={level}>{level}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-red-300" />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="githubUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white/90">GitHub URL (optional)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="https://github.com/yourusername" 
+                      {...field} 
+                      className="bg-black/50 border border-arc-accent/30 text-white placeholder:text-gray-500"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-300" />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="linkedinUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white/90">LinkedIn URL (optional)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="https://linkedin.com/in/yourusername" 
+                      {...field} 
+                      className="bg-black/50 border border-arc-accent/30 text-white placeholder:text-gray-500"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-red-300" />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="age"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Age</FormLabel>
+                  <FormLabel className="text-white/90">Age (optional)</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input 
+                      type="number" 
+                      placeholder="25" 
+                      {...field} 
+                      className="bg-black/50 border border-arc-accent/30 text-white placeholder:text-gray-500"
+                    />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-red-300" />
                 </FormItem>
               )}
             />
-
+            
             <FormField
               control={form.control}
               name="gender"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Gender</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormLabel className="text-white/90">Gender (optional)</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your gender" />
+                      <SelectTrigger className="bg-black/50 border border-arc-accent/30 text-white">
+                        <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Non-binary">Non-binary</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                      <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+                    <SelectContent className="bg-gray-800 border border-arc-accent/30 text-white">
+                      {genders.map((gender) => (
+                        <SelectItem key={gender} value={gender}>{gender}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
+                  <FormMessage className="text-red-300" />
                 </FormItem>
               )}
             />
           </div>
-
-          <FormField
-            control={form.control}
-            name="department"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Department / Field of Study</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., Computer Science, Engineering, Design" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="educationLevel"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Highest Education Level</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select education level" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="High School">High School</SelectItem>
-                    <SelectItem value="Associate's">Associate's Degree</SelectItem>
-                    <SelectItem value="Bachelor's">Bachelor's Degree</SelectItem>
-                    <SelectItem value="Master's">Master's Degree</SelectItem>
-                    <SelectItem value="PhD">PhD</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="githubUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>GitHub Profile URL</FormLabel>
-                <FormControl>
-                  <Input placeholder="https://github.com/yourusername" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="linkedinUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>LinkedIn Profile URL</FormLabel>
-                <FormControl>
-                  <Input placeholder="https://linkedin.com/in/yourusername" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : "Sign Up"}
+          
+          <Button 
+            type="submit" 
+            className="w-full bg-gradient-to-r from-arc-secondary to-arc-accent text-white 
+            transition-all duration-300 ease-out hover:from-arc-accent hover:to-arc-light hover:scale-[1.02] 
+            hover:shadow-[0_4px_20px_rgba(139,92,246,0.5)]" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Creating Account..." : "Create Account"}
           </Button>
-
-          <div className="text-center text-sm">
-            Already have an account?{" "}
-            <Link to="/login" className="text-arc-accent underline underline-offset-4 hover:text-arc-accent/80">
-              Log In
-            </Link>
-          </div>
         </form>
       </Form>
+
+      <div className="mt-6 text-center text-sm">
+        <span className="text-gray-400">Already have an account?</span>{" "}
+        <Link to="/login" className="text-arc-accent hover:text-arc-light transition-colors duration-200">
+          Log in
+        </Link>
+      </div>
     </AuthLayout>
   );
 };
