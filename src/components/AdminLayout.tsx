@@ -3,160 +3,94 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import Logo from './Logo';
-import { 
-  Menu, X, User, LayoutDashboard, Users, Flag, 
-  Lightbulb, FolderGit2, FileText, Calendar, 
-  CircleUser, Award, BarChart, MessageSquare, 
-  Megaphone, Settings, Search, Bell
-} from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { Menu, X, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
   title: string;
 }
 
-const navigationItems = [
-  { name: 'Dashboard Home', href: '/admin', icon: LayoutDashboard },
-  { name: 'User Management', href: '/admin/users', icon: Users },
-  { name: 'Content Moderation', href: '/admin/moderation', icon: Flag },
-  { name: 'Ideas Oversight', href: '/admin/ideas', icon: Lightbulb },
-  { name: 'Projects Oversight', href: '/admin/projects', icon: FolderGit2 },
-  { name: 'Docs Review', href: '/admin/docs', icon: FileText },
-  { name: 'Tech Talks Management', href: '/admin/talks', icon: Calendar },
-  { name: 'Community Circles', href: '/admin/circles', icon: CircleUser },
-  { name: 'Gamification & Badges', href: '/admin/badges', icon: Award },
-  { name: 'Analytics & Reports', href: '/admin/analytics', icon: BarChart },
-  { name: 'Feedback & Bug Reports', href: '/admin/feedback', icon: MessageSquare },
-  { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },
-  { name: 'Settings & Logs', href: '/admin/settings', icon: Settings },
-];
-
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
   const { logout, admin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const location = useLocation();
   
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
   
   return (
-    <div className="admin-layout min-h-screen bg-gray-900 text-white flex">
-      <div 
-        className={`admin-sidebar bg-gray-800 transition-all duration-300 ease-in-out fixed h-full z-30
-          ${sidebarOpen ? 'w-64' : 'w-0 -translate-x-full md:w-16 md:translate-x-0'}`}
-      >
-        <div className="overflow-y-auto h-full flex flex-col">
-          <div className="flex items-center space-x-2 p-4 h-16">
-            {(sidebarOpen || !sidebarOpen && window.innerWidth >= 768) && (
-              <>
-                <Logo className="h-8 w-8 flex-shrink-0" />
-                {sidebarOpen && <span className="text-lg font-bold">Builders Arc</span>}
-              </>
-            )}
+    <div className="admin-layout">
+      <div className={`admin-sidebar transition-all duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex items-center space-x-2 pb-6">
+          <Logo className="h-8 w-8" />
+          <span className="text-lg font-bold">Builders Arc</span>
+        </div>
+        
+        <nav className="space-y-1">
+          <a 
+            href="/admin" 
+            className="flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10 transition-all duration-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h2" />
+            </svg>
+            <span>Dashboard</span>
+          </a>
+          <a 
+            href="/admin/users" 
+            className="flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10 transition-all duration-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <span>All Users</span>
+          </a>
+        </nav>
+        
+        <div className="mt-auto pt-6">
+          <div className="mb-2 flex items-center space-x-2 px-3 py-2 text-sm">
+            <div className="h-6 w-6 rounded-full bg-white/20"></div>
+            <span className="text-white/80">{admin?.email}</span>
           </div>
-          
-          <nav className="flex-1 px-2 py-4 space-y-1">
-            {navigationItems.map((item) => {
-              const isActive = location.pathname === item.href || 
-                (item.href !== '/admin' && location.pathname.startsWith(item.href));
-              
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-all duration-200",
-                    isActive 
-                      ? "bg-purple-700 text-white" 
-                      : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                  )}
-                >
-                  <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
-                  {sidebarOpen && <span>{item.name}</span>}
-                </Link>
-              );
-            })}
-          </nav>
-          
-          <div className="p-4 border-t border-gray-700">
-            <div className="mb-2 flex items-center space-x-2 px-3 py-2 text-sm text-white/80">
-              <User className="h-5 w-5 text-gray-400" />
-              {sidebarOpen && <span>{admin?.email}</span>}
-            </div>
-            <Button 
-              variant="outline" 
-              className={cn(
-                "w-full bg-gray-700 text-white hover:bg-gray-600 border-gray-600",
-                !sidebarOpen && "justify-center p-2"
-              )}
-              onClick={logout}
-            >
-              {sidebarOpen ? "Logout" : ""}
-            </Button>
-          </div>
+          <Button 
+            variant="outline" 
+            className="w-full bg-white/10 text-white hover:bg-white/20" 
+            onClick={logout}
+          >
+            Logout
+          </Button>
         </div>
       </div>
       
-      <div 
-        className={`admin-content transition-all duration-300 ease-in-out flex-1 
-          ${sidebarOpen ? 'md:ml-64' : 'ml-0 md:ml-16'}`}
-      >
-        <div className="admin-header bg-gray-800 border-b border-gray-700 p-4 flex items-center justify-between sticky top-0 z-20">
+      <div className={`admin-content transition-all duration-300 ease-in-out ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
+        <div className="admin-header">
           <div className="flex items-center gap-4">
             <Button 
               variant="outline" 
               size="icon"
               onClick={toggleSidebar} 
-              className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
+              className="bg-gradient-to-r from-arc-secondary to-arc-accent text-white hover:from-arc-accent hover:to-arc-light hover:scale-[1.02] transition-all duration-200"
               aria-label="Toggle sidebar"
             >
               {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
             </Button>
             <h1 className="text-2xl font-bold">{title}</h1>
           </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Global search */}
-            <div className="hidden md:flex relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
-              </div>
-              <input 
-                type="text" 
-                placeholder="Search across admin..." 
-                className="bg-gray-700 border-gray-600 text-white pl-10 pr-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 w-64"
-              />
-            </div>
-            
-            {/* Notifications */}
-            <Button 
-              variant="outline" 
-              size="icon"
-              className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600 relative"
-            >
-              <Bell size={18} />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </Button>
-            
-            {/* Profile */}
-            <Link to="/admin/profile">
+          <div className="flex items-center gap-2">
+            <Link to="/profile">
               <Button 
                 variant="outline" 
-                className="flex items-center gap-2 bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
+                className="flex items-center gap-2 bg-gradient-to-r from-arc-secondary/40 to-arc-accent/40 text-white hover:from-arc-secondary hover:to-arc-accent hover:scale-[1.02] transition-all duration-200"
               >
                 <User size={18} />
-                <span className="hidden md:inline">Profile</span>
+                Profile
               </Button>
             </Link>
           </div>
         </div>
         
-        <div className="p-6">
-          {children}
-        </div>
+        {children}
       </div>
     </div>
   );
