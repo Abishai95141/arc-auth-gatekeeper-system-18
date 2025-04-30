@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, MessageSquare, FileText, User, Calendar } from 'lucide-react';
+import { Check, X, MessageSquare, FileText, User, Calendar, Search } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 import {
   Dialog,
