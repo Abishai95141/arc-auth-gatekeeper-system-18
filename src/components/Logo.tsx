@@ -9,8 +9,12 @@ export const Logo: React.FC<{ className?: string }> = ({ className }) => (
       <div className="absolute inset-0 bg-white/10 rounded-full"></div>
       {/* Bevel effect */}
       <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50 rounded-t-full" style={{ height: '50%' }}></div>
-      {/* Content */}
-      <span className="text-xl font-bold relative z-10 tracking-tight">BA</span>
+      {/* Logo image */}
+      <img 
+        src="/lovable-uploads/0f4a44f5-a6f9-4c0c-b55b-e5efc017ea50.png" 
+        alt="Builders Arc" 
+        className="w-3/4 h-3/4 object-contain relative z-10"
+      />
     </div>
   </div>
 );

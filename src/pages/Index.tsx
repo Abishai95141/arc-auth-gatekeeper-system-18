@@ -34,8 +34,11 @@ const Index = () => {
       </header>
       
       <main className="flex-1">
-        <section className="bg-gradient-to-b from-transparent via-black/40 to-black/60 py-20 text-center">
-          <div className="container px-4 animate-fade-in">
+        <section className="flex flex-col items-center justify-center bg-gradient-to-b from-transparent via-black/40 to-black/60 py-20 text-center min-h-[80vh]">
+          <div className="container px-4 animate-fade-in flex flex-col items-center">
+            {/* Centered Logo */}
+            <Logo className="h-40 w-40 mb-6" />
+            
             <h1 className="mb-6 text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
               <span className="text-arc-accent">Builders Arc</span>
             </h1>
@@ -105,29 +108,6 @@ const Index = () => {
                 <p className="text-gray-300">
                   Turn your ideas into reality with our project incubation program. Find team members and receive guidance from experienced mentors.
                 </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-16">
-          <div className="container px-4">
-            <div className="mx-auto max-w-3xl rounded-xl border border-arc-accent/20 bg-black/60 p-8 backdrop-blur-md shadow-lg animate-fade-in">
-              <h2 className="mb-4 text-center text-2xl font-bold text-white">Ready to join the community?</h2>
-              <p className="mb-6 text-center text-gray-300">
-                Apply today and connect with other tech enthusiasts who share your passion.
-              </p>
-              <div className="flex justify-center">
-                <Link to="/signup">
-                  <Button 
-                    size="lg"
-                    className="bg-gradient-to-r from-arc-secondary to-arc-accent text-white 
-                    transition-all duration-300 ease-out hover:from-arc-accent hover:to-arc-light hover:scale-[1.04] 
-                    hover:shadow-[0_4px_20px_rgba(139,92,246,0.5)]"
-                  >
-                    Apply to Join
-                  </Button>
-                </Link>
               </div>
             </div>
           </div>
