@@ -13,7 +13,8 @@ import { getAllUsers, getAllPendingUsers, approveUser, rejectUser, User } from '
 import { 
   Users, AlertTriangle, Lightbulb, FolderGit2, 
   FileText, Calendar, TrendingUp, Bell, ArrowUpRight,
-  Plus, ChevronRight, BadgeCheck, ShieldAlert, RefreshCw
+  Plus, ChevronRight, BadgeCheck, ShieldAlert, RefreshCw,
+  Flag, Megaphone
 } from 'lucide-react';
 
 const AdminDashboardPage: React.FC = () => {
