@@ -54,11 +54,26 @@ const SignupPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const signupData: SignupFormData = {
-        ...values
+        fullName: values.fullName,
+        email: values.email,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+        age: values.age,
+        gender: values.gender,
+        department: values.department,
+        educationLevel: values.educationLevel,
+        githubUrl: values.githubUrl,
+        linkedinUrl: values.linkedinUrl
       };
-      await signupUser(signupData);
-      toast.success("Sign up request submitted successfully!");
-      navigate('/signup-success');
+      
+      const result = await signupUser(signupData);
+      
+      if (result.success) {
+        toast.success(result.message);
+        navigate('/signup-success');
+      } else {
+        toast.error(result.message);
+      }
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);

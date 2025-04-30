@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { User, Admin, loginUser, loginAdmin, UserCredentials } from '@/services/database';
 import { toast } from "@/components/ui/sonner";
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
@@ -53,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { user, message } = await loginUser(credentials);
       
-      if (user.status === 'approved') {
+      if (user) {
         setUser(user);
         localStorage.setItem('arc_user', JSON.stringify(user));
         navigate('/dashboard');
@@ -90,7 +91,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Sign out from Supabase auth
+    await supabase.auth.signOut();
+    
+    // Clear local state
     setUser(null);
     setAdmin(null);
     localStorage.removeItem('arc_user');
