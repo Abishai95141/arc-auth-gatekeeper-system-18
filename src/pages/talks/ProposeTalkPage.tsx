@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar as CalendarIcon, Mic, FileText, Clock, Users, ChevronLeft, X, Plus } from 'lucide-react';
@@ -78,7 +77,7 @@ const ProposeTalkPage: React.FC = () => {
     if (!title || !abstract || !date || !timeSlot || !bio) {
       toast("Missing information", {
         description: "Please fill in all required fields.",
-        variant: "destructive"
+        className: "bg-destructive"
       });
       return;
     }
