@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { Calendar, Clock, Video, MapPin } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Video, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -35,8 +35,7 @@ const TalkCard: React.FC<TalkCardProps> = ({ talk, isPast = false, onClick }) =>
     const newStatus = !isAttending;
     setIsAttending(newStatus);
     
-    toast({
-      title: newStatus ? "RSVP Confirmed" : "RSVP Cancelled",
+    toast(newStatus ? "RSVP Confirmed" : "RSVP Cancelled", {
       description: newStatus 
         ? "You're now registered for this talk" 
         : "You've cancelled your registration",
@@ -47,8 +46,7 @@ const TalkCard: React.FC<TalkCardProps> = ({ talk, isPast = false, onClick }) =>
   const addToCalendar = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    toast({
-      title: "Added to Calendar",
+    toast("Added to Calendar", {
       description: "Event has been added to your calendar",
       duration: 3000
     });
@@ -83,7 +81,7 @@ const TalkCard: React.FC<TalkCardProps> = ({ talk, isPast = false, onClick }) =>
             <span className="text-white">{talk.speaker.name}</span>
             
             <div className="flex items-center text-gray-300 text-sm ml-auto">
-              <Calendar className="h-4 w-4 mr-1 text-arc-accent" />
+              <CalendarIcon className="h-4 w-4 mr-1 text-arc-accent" />
               <span>{format(talk.date, 'MMM d, yyyy')}</span>
             </div>
             

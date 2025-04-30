@@ -76,8 +76,7 @@ const ProposeTalkPage: React.FC = () => {
     
     // Validation
     if (!title || !abstract || !date || !timeSlot || !bio) {
-      toast({
-        title: "Missing information",
+      toast("Missing information", {
         description: "Please fill in all required fields.",
         variant: "destructive"
       });
@@ -85,8 +84,7 @@ const ProposeTalkPage: React.FC = () => {
     }
     
     // Submit form
-    toast({
-      title: "Talk proposal submitted!",
+    toast("Talk proposal submitted!", {
       description: "Your proposal has been received and is under review."
     });
     
@@ -98,8 +96,7 @@ const ProposeTalkPage: React.FC = () => {
   
   // Save draft
   const saveDraft = () => {
-    toast({
-      title: "Draft saved",
+    toast("Draft saved", {
       description: "Your talk proposal has been saved as a draft."
     });
   };

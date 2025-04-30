@@ -29,8 +29,7 @@ const TalkEventPopover: React.FC<TalkEventPopoverProps> = ({ talk }) => {
     const newStatus = !isAttending;
     setIsAttending(newStatus);
     
-    toast({
-      title: newStatus ? "RSVP Confirmed" : "RSVP Cancelled",
+    toast(newStatus ? "RSVP Confirmed" : "RSVP Cancelled", {
       description: newStatus 
         ? "You're now registered for this talk" 
         : "You've cancelled your registration",
@@ -39,8 +38,7 @@ const TalkEventPopover: React.FC<TalkEventPopoverProps> = ({ talk }) => {
   };
   
   const addToCalendar = () => {
-    toast({
-      title: "Added to Calendar",
+    toast("Added to Calendar", {
       description: "Event has been added to your calendar",
       duration: 3000
     });
