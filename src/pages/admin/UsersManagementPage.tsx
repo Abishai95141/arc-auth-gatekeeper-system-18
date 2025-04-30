@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/sonner';
-import { getAllUsers, User } from '@/services/database';
+import { getAllUsers, User, UserStatus } from '@/services/database';
 import AdminLayout from '@/components/AdminLayout';
 import { Search, UserCheck, UserMinus, UserPlus } from 'lucide-react';
 
@@ -100,7 +100,7 @@ const UsersManagementPage: React.FC = () => {
     setUsers(prevUsers => 
       prevUsers.map(user => {
         if (user.id === userId) {
-          const newStatus = user.status === 'approved' ? 'suspended' : 'approved';
+          const newStatus = user.status === 'approved' ? ('suspended' as UserStatus) : ('approved' as UserStatus);
           return { ...user, status: newStatus };
         }
         return user;

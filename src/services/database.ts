@@ -1,8 +1,7 @@
-
 import { toast } from "@/components/ui/sonner";
 
 // User types
-export type UserStatus = 'pending' | 'approved' | 'rejected';
+export type UserStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 
 export interface User {
   id: string;
