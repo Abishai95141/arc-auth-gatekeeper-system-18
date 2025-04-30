@@ -1,5 +1,0 @@
-
-project_id = "dsqtbciztlqevkegrnfw"
-
-[functions.approveUser]
-verify_jwt = false

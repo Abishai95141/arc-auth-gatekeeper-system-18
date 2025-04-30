@@ -1,5 +1,4 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 
 // User types
@@ -44,284 +43,209 @@ export interface Admin {
   name: string;
 }
 
-// Signup User
-export async function signupUser(userData: SignupFormData): Promise<{ success: boolean; message: string }> {
-  try {
-    // Save the signup request in the signup_requests table
-    const { error } = await supabase.from('signup_requests').insert({
-      full_name: userData.fullName,
-      email: userData.email,
-      password: userData.password, // In a real app, we'd hash this
-      age: userData.age,
-      gender: userData.gender,
-      department: userData.department,
-      education_level: userData.educationLevel,
-      github_url: userData.githubUrl,
-      linkedin_url: userData.linkedinUrl
-    });
-    
-    if (error) throw error;
-    
-    return { success: true, message: 'Signup request submitted successfully!' };
-  } catch (error: any) {
-    console.error('Error during signup:', error);
-    return { success: false, message: error.message || 'An unexpected error occurred' };
+// Mock database
+let users: User[] = [
+  {
+    id: '1',
+    fullName: 'Test User',
+    email: 'user@test.com',
+    age: 25,
+    gender: 'Male',
+    department: 'Computer Science',
+    educationLevel: 'Bachelor',
+    githubUrl: 'https://github.com/testuser',
+    linkedinUrl: 'https://linkedin.com/in/testuser',
+    status: 'approved',
+    createdAt: new Date('2023-01-01'),
+  },
+  {
+    id: '2',
+    fullName: 'Pending User',
+    email: 'pending@test.com',
+    age: 30,
+    gender: 'Female',
+    department: 'Engineering',
+    educationLevel: 'Master',
+    githubUrl: 'https://github.com/pendinguser',
+    linkedinUrl: 'https://linkedin.com/in/pendinguser',
+    status: 'pending',
+    createdAt: new Date('2023-02-01'),
+  },
+  {
+    id: '3',
+    fullName: 'Rejected User',
+    email: 'rejected@test.com',
+    age: 28,
+    gender: 'Other',
+    department: 'Design',
+    educationLevel: 'PhD',
+    githubUrl: 'https://github.com/rejecteduser',
+    linkedinUrl: 'https://linkedin.com/in/rejecteduser',
+    status: 'rejected',
+    createdAt: new Date('2023-03-01'),
   }
+];
+
+const admins = [
+  {
+    id: '1',
+    email: 'abishaioff@gmail.com',
+    name: 'Admin User',
+  }
+];
+
+// Password storage (not secure, just for demo)
+const userPasswords = new Map([
+  ['user@test.com', 'password123'],
+  ['pending@test.com', 'password123'],
+  ['rejected@test.com', 'password123'],
+]);
+
+const adminPasswords = new Map([
+  ['abishaioff@gmail.com', 'Abi@2925'],
+]);
+
+// Helper functions
+function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// User Login
-export async function loginUser(credentials: UserCredentials): Promise<{ user: User | null; message?: string }> {
-  try {
-    // First check if the user has a pending or rejected signup request
-    const { data: signupData } = await supabase
-      .from('signup_requests')
-      .select('status')
-      .eq('email', credentials.email)
-      .single();
-    
-    if (signupData) {
-      if (signupData.status === 'pending') {
-        return { 
-          user: null,
-          message: 'Your account is pending approval. Please wait for an admin to accept your request.'
-        };
-      }
-      
-      if (signupData.status === 'rejected') {
-        return { 
-          user: null,
-          message: 'Your signup request has been declined. Contact support for more information.'
-        };
-      }
-    }
-
-    // If not pending or rejected, try to sign in
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: credentials.email,
-      password: credentials.password,
-    });
-
-    if (error) throw error;
-
-    if (data?.user) {
-      // Get user profile
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-      
-      if (profileData) {
-        const user: User = {
-          id: profileData.id,
-          fullName: profileData.full_name,
-          email: profileData.email || data.user.email || '',
-          age: profileData.age || 0,
-          gender: profileData.gender || '',
-          department: profileData.department || '',
-          educationLevel: profileData.education_level || profileData.education || '',
-          githubUrl: profileData.github_url || '',
-          linkedinUrl: profileData.linkedin_url || '',
-          status: profileData.status as UserStatus || 'approved',
-          createdAt: new Date(profileData.created_at),
-        };
-        
-        return { user };
-      }
-    }
-    
-    return { user: null, message: 'User profile not found' };
-  } catch (error: any) {
-    console.error('Error during login:', error);
-    throw new Error(error.message || 'Invalid email or password');
+// User operations
+export async function signupUser(userData: SignupFormData): Promise<User> {
+  await delay(1000); // Simulate API delay
+  
+  // Check if user already exists
+  if (users.some(user => user.email === userData.email)) {
+    throw new Error('User with this email already exists');
   }
+
+  const newUser: User = {
+    id: Math.random().toString(36).substring(7),
+    fullName: userData.fullName,
+    email: userData.email,
+    age: userData.age,
+    gender: userData.gender,
+    department: userData.department,
+    educationLevel: userData.educationLevel,
+    githubUrl: userData.githubUrl,
+    linkedinUrl: userData.linkedinUrl,
+    status: 'pending',
+    createdAt: new Date(),
+  };
+
+  // Store password
+  userPasswords.set(userData.email, userData.password);
+  
+  // Add user to database
+  users = [...users, newUser];
+  
+  return newUser;
 }
 
-// Admin Login
-export async function loginAdmin(credentials: UserCredentials): Promise<Admin> {
-  try {
-    // Use raw SQL query since admins table is not in generated types
-    const { data, error } = await supabase
-      .rpc('admin_login', { 
-        admin_email: credentials.email, 
-        admin_password: credentials.password 
-      });
-    
-    if (error || !data || data.length === 0) {
-      throw new Error('Invalid admin credentials. Please try again.');
-    }
-    
-    const adminData = data[0];
-    
-    const admin: Admin = {
-      id: adminData.id,
-      email: adminData.email,
-      name: adminData.name
+export async function loginUser(credentials: UserCredentials): Promise<{ user: User, message?: string }> {
+  await delay(800); // Simulate API delay
+  
+  const user = users.find(user => user.email === credentials.email);
+  
+  if (!user) {
+    throw new Error('Invalid email or password');
+  }
+  
+  const storedPassword = userPasswords.get(credentials.email);
+  
+  if (storedPassword !== credentials.password) {
+    throw new Error('Invalid email or password');
+  }
+  
+  if (user.status === 'pending') {
+    return { 
+      user,
+      message: 'Your account is pending approval. Please wait for an admin to accept your request.'
     };
-    
-    return admin;
-  } catch (error: any) {
-    console.error('Error during admin login:', error);
+  }
+  
+  if (user.status === 'rejected') {
+    return { 
+      user,
+      message: 'Your signup request has been declined. Contact support for more information.'
+    };
+  }
+  
+  return { user };
+}
+
+export async function loginAdmin(credentials: UserCredentials): Promise<Admin> {
+  await delay(800); // Simulate API delay
+  
+  const admin = admins.find(admin => admin.email === credentials.email);
+  
+  if (!admin) {
     throw new Error('Invalid admin credentials. Please try again.');
   }
+  
+  const storedPassword = adminPasswords.get(credentials.email);
+  
+  if (storedPassword !== credentials.password) {
+    throw new Error('Invalid admin credentials. Please try again.');
+  }
+  
+  return admin;
 }
 
-// Get All Pending Users
 export async function getAllPendingUsers(): Promise<User[]> {
-  try {
-    const { data, error } = await supabase
-      .from('signup_requests')
-      .select('*')
-      .eq('status', 'pending');
-    
-    if (error) throw error;
-    
-    return data.map((item: any) => ({
-      id: item.id,
-      fullName: item.full_name,
-      email: item.email,
-      age: item.age,
-      gender: item.gender,
-      department: item.department,
-      educationLevel: item.education_level || item.education || '',
-      githubUrl: item.github_url,
-      linkedinUrl: item.linkedin_url,
-      status: item.status,
-      createdAt: new Date(item.created_at),
-    }));
-  } catch (error) {
-    console.error('Error fetching pending users:', error);
-    return [];
-  }
+  await delay(500); // Simulate API delay
+  return users.filter(user => user.status === 'pending');
 }
 
-// Get All Users
 export async function getAllUsers(): Promise<User[]> {
-  try {
-    // Get from signup_requests (includes all statuses)
-    const { data, error } = await supabase
-      .from('signup_requests')
-      .select('*');
-    
-    if (error) throw error;
-    
-    return data.map((item: any) => ({
-      id: item.id,
-      fullName: item.full_name,
-      email: item.email,
-      age: item.age,
-      gender: item.gender,
-      department: item.department,
-      educationLevel: item.education_level || item.education || '',
-      githubUrl: item.github_url,
-      linkedinUrl: item.linkedin_url,
-      status: item.status,
-      createdAt: new Date(item.created_at),
-    }));
-  } catch (error) {
-    console.error('Error fetching all users:', error);
-    return [];
-  }
+  await delay(500); // Simulate API delay
+  return users;
 }
 
-// Approve User
 export async function approveUser(userId: string): Promise<User> {
-  try {
-    // Get the user from signup_requests
-    const { data: userData, error: fetchError } = await supabase
-      .from('signup_requests')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    
-    if (fetchError || !userData) throw new Error('User not found');
-    
-    // Update the status to approved
-    const { error: updateError } = await supabase
-      .from('signup_requests')
-      .update({
-        status: 'approved',
-        reviewed_at: new Date().toISOString(),
-      })
-      .eq('id', userId);
-    
-    if (updateError) throw updateError;
-
-    // Call edge function to create the user
-    const { data, error: functionError } = await supabase.functions.invoke(
-      'approveUser',
-      {
-        body: { userId: userId, userEmail: userData.email, userPassword: userData.password }
-      }
-    );
-    
-    if (functionError) throw functionError;
-    
-    const user: User = {
-      id: userData.id,
-      fullName: userData.full_name,
-      email: userData.email,
-      age: userData.age,
-      gender: userData.gender,
-      department: userData.department,
-      educationLevel: userData.education_level || userData.education || '',
-      githubUrl: userData.github_url,
-      linkedinUrl: userData.linkedin_url,
-      status: 'approved',
-      createdAt: new Date(userData.created_at),
-    };
-    
-    toast.success(`${user.fullName} has been approved`);
-    return user;
-  } catch (error: any) {
-    console.error('Error approving user:', error);
-    toast.error(`Error approving user: ${error.message}`);
-    throw error;
+  await delay(800); // Simulate API delay
+  
+  const userIndex = users.findIndex(user => user.id === userId);
+  
+  if (userIndex === -1) {
+    throw new Error('User not found');
   }
+  
+  const updatedUser = {
+    ...users[userIndex],
+    status: 'approved' as UserStatus,
+  };
+  
+  users = [
+    ...users.slice(0, userIndex),
+    updatedUser,
+    ...users.slice(userIndex + 1),
+  ];
+  
+  toast.success(`${updatedUser.fullName} has been approved`);
+  return updatedUser;
 }
 
-// Reject User
 export async function rejectUser(userId: string): Promise<User> {
-  try {
-    // Get the user from signup_requests
-    const { data: userData, error: fetchError } = await supabase
-      .from('signup_requests')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    
-    if (fetchError || !userData) throw new Error('User not found');
-    
-    // Update the status to rejected
-    const { error: updateError } = await supabase
-      .from('signup_requests')
-      .update({
-        status: 'rejected',
-        reviewed_at: new Date().toISOString(),
-      })
-      .eq('id', userId);
-    
-    if (updateError) throw updateError;
-    
-    const user: User = {
-      id: userData.id,
-      fullName: userData.full_name,
-      email: userData.email,
-      age: userData.age,
-      gender: userData.gender,
-      department: userData.department,
-      educationLevel: userData.education_level || userData.education || '',
-      githubUrl: userData.github_url,
-      linkedinUrl: userData.linkedin_url,
-      status: 'rejected',
-      createdAt: new Date(userData.created_at),
-    };
-    
-    toast.success(`${user.fullName} has been rejected`);
-    return user;
-  } catch (error: any) {
-    console.error('Error rejecting user:', error);
-    toast.error(`Error rejecting user: ${error.message}`);
-    throw error;
+  await delay(800); // Simulate API delay
+  
+  const userIndex = users.findIndex(user => user.id === userId);
+  
+  if (userIndex === -1) {
+    throw new Error('User not found');
   }
+  
+  const updatedUser = {
+    ...users[userIndex],
+    status: 'rejected' as UserStatus,
+  };
+  
+  users = [
+    ...users.slice(0, userIndex),
+    updatedUser,
+    ...users.slice(userIndex + 1),
+  ];
+  
+  toast.success(`${updatedUser.fullName} has been rejected`);
+  return updatedUser;
 }

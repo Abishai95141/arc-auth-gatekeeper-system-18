@@ -29,10 +29,7 @@ const LoginPage: React.FC = () => {
   });
 
   const onSubmit = async (values: LoginFormValues) => {
-    await userLogin({
-      email: values.email,
-      password: values.password
-    });
+    await userLogin(values);
   };
 
   return (
