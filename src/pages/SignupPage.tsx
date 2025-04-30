@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -86,7 +87,21 @@ const SignupPage: React.FC = () => {
           onSubmit={form.handleSubmit(async (data) => {
             // Remove confirmPassword before sending to API
             const { confirmPassword, ...signupData } = data;
-            await handleSignup(signupData);
+            
+            // Ensure all required fields are present for SignupFormData
+            const formDataToSubmit: SignupFormData = {
+              email: signupData.email,
+              password: signupData.password,
+              fullName: signupData.fullName,
+              department: signupData.department,
+              educationLevel: signupData.educationLevel,
+              githubUrl: signupData.githubUrl,
+              linkedinUrl: signupData.linkedinUrl,
+              age: signupData.age ? parseInt(signupData.age, 10) : undefined,
+              gender: signupData.gender
+            };
+            
+            await handleSignup(formDataToSubmit);
           })} 
           className="space-y-4"
         >
