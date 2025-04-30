@@ -10,10 +10,10 @@ const SignupSuccessPage: React.FC = () => {
       title="Signup Request Submitted"
       description="Your account is pending approval"
     >
-      <div className="text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+      <div className="text-center animate-fade-in">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-900/30 border border-green-400/30">
           <svg
-            className="h-8 w-8 text-green-600"
+            className="h-8 w-8 text-green-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -27,14 +27,17 @@ const SignupSuccessPage: React.FC = () => {
             />
           </svg>
         </div>
-        <h3 className="mb-2 text-xl font-semibold">Thanks for signing up!</h3>
-        <p className="text-muted-foreground">
+        <h3 className="mb-2 text-xl font-semibold text-white">Thanks for signing up!</h3>
+        <p className="text-gray-300">
           Your request has been sent to our admins for review. 
           Please wait for approval before logging in.
         </p>
         <div className="mt-6 space-y-2">
           <Link to="/login">
-            <Button variant="outline" className="w-full">
+            <Button 
+              variant="outline" 
+              className="w-full border-arc-accent/30 text-white hover:bg-arc-accent/20 hover:text-white transition-all duration-200"
+            >
               Return to Login
             </Button>
           </Link>
