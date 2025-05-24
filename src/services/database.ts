@@ -1,6 +1,24 @@
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
-// User types
+// Profile type matching the Supabase profiles table
+export interface Profile {
+  id: string;
+  full_name: string;
+  email: string;
+  age: number | null;
+  gender: string | null;
+  department: string | null;
+  education_level: string | null;
+  github_url: string | null;
+  linkedin_url: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  role: 'user' | 'admin';
+  created_at: string;
+}
+
+// Keep existing types for compatibility
 export type UserStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 
 export interface User {
@@ -42,209 +60,268 @@ export interface Admin {
   name: string;
 }
 
-// Mock database
-let users: User[] = [
-  {
-    id: '1',
-    fullName: 'Test User',
-    email: 'user@test.com',
-    age: 25,
-    gender: 'Male',
-    department: 'Computer Science',
-    educationLevel: 'Bachelor',
-    githubUrl: 'https://github.com/testuser',
-    linkedinUrl: 'https://linkedin.com/in/testuser',
-    status: 'approved',
-    createdAt: new Date('2023-01-01'),
-  },
-  {
-    id: '2',
-    fullName: 'Pending User',
-    email: 'pending@test.com',
-    age: 30,
-    gender: 'Female',
-    department: 'Engineering',
-    educationLevel: 'Master',
-    githubUrl: 'https://github.com/pendinguser',
-    linkedinUrl: 'https://linkedin.com/in/pendinguser',
-    status: 'pending',
-    createdAt: new Date('2023-02-01'),
-  },
-  {
-    id: '3',
-    fullName: 'Rejected User',
-    email: 'rejected@test.com',
-    age: 28,
-    gender: 'Other',
-    department: 'Design',
-    educationLevel: 'PhD',
-    githubUrl: 'https://github.com/rejecteduser',
-    linkedinUrl: 'https://linkedin.com/in/rejecteduser',
-    status: 'rejected',
-    createdAt: new Date('2023-03-01'),
-  }
-];
-
-const admins = [
-  {
-    id: '1',
-    email: 'abishaioff@gmail.com',
-    name: 'Admin User',
-  }
-];
-
-// Password storage (not secure, just for demo)
-const userPasswords = new Map([
-  ['user@test.com', 'password123'],
-  ['pending@test.com', 'password123'],
-  ['rejected@test.com', 'password123'],
-]);
-
-const adminPasswords = new Map([
-  ['abishaioff@gmail.com', 'Abi@2925'],
-]);
-
-// Helper functions
-function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+// Helper function to convert Profile to User for backward compatibility
+function profileToUser(profile: Profile): User {
+  return {
+    id: profile.id,
+    fullName: profile.full_name,
+    email: profile.email,
+    age: profile.age || 0,
+    gender: profile.gender || '',
+    department: profile.department || '',
+    educationLevel: profile.education_level || '',
+    githubUrl: profile.github_url || '',
+    linkedinUrl: profile.linkedin_url || '',
+    status: profile.status as UserStatus,
+    createdAt: new Date(profile.created_at),
+  };
 }
 
-// User operations
-export async function signupUser(userData: SignupFormData): Promise<User> {
-  await delay(1000); // Simulate API delay
+// Supabase-based functions
+export async function signupWithSupabase(userData: SignupFormData): Promise<{ user: SupabaseUser; profile: Profile }> {
+  console.log('Starting signup process with Supabase');
   
-  // Check if user already exists
-  if (users.some(user => user.email === userData.email)) {
-    throw new Error('User with this email already exists');
+  // Step 1: Create auth user
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: userData.email,
+    password: userData.password,
+  });
+
+  if (authError) {
+    console.error('Auth signup error:', authError);
+    throw new Error(authError.message);
   }
 
-  const newUser: User = {
-    id: Math.random().toString(36).substring(7),
-    fullName: userData.fullName,
+  if (!authData.user) {
+    throw new Error('User creation failed');
+  }
+
+  console.log('Auth user created successfully:', authData.user.id);
+
+  // Step 2: Create profile
+  const profileData = {
+    id: authData.user.id,
+    full_name: userData.fullName,
     email: userData.email,
     age: userData.age,
     gender: userData.gender,
     department: userData.department,
-    educationLevel: userData.educationLevel,
-    githubUrl: userData.githubUrl,
-    linkedinUrl: userData.linkedinUrl,
-    status: 'pending',
-    createdAt: new Date(),
+    education_level: userData.educationLevel,
+    github_url: userData.githubUrl,
+    linkedin_url: userData.linkedinUrl,
+    status: 'pending' as const,
+    role: 'user' as const,
   };
 
-  // Store password
-  userPasswords.set(userData.email, userData.password);
-  
-  // Add user to database
-  users = [...users, newUser];
-  
-  return newUser;
+  const { data: profileResult, error: profileError } = await supabase
+    .from('profiles')
+    .insert(profileData)
+    .select()
+    .single();
+
+  if (profileError) {
+    console.error('Profile creation error:', profileError);
+    // Clean up auth user if profile creation fails
+    await supabase.auth.admin.deleteUser(authData.user.id);
+    throw new Error(`Profile creation failed: ${profileError.message}`);
+  }
+
+  console.log('Profile created successfully');
+  return { user: authData.user, profile: profileResult };
 }
 
-export async function loginUser(credentials: UserCredentials): Promise<{ user: User, message?: string }> {
-  await delay(800); // Simulate API delay
+export async function loginWithSupabase(credentials: UserCredentials): Promise<{ user: SupabaseUser; profile: Profile; message?: string }> {
+  console.log('Starting login process with Supabase');
   
-  const user = users.find(user => user.email === credentials.email);
-  
-  if (!user) {
+  // Step 1: Authenticate with Supabase
+  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    email: credentials.email,
+    password: credentials.password,
+  });
+
+  if (authError) {
+    console.error('Auth login error:', authError);
     throw new Error('Invalid email or password');
   }
-  
-  const storedPassword = userPasswords.get(credentials.email);
-  
-  if (storedPassword !== credentials.password) {
-    throw new Error('Invalid email or password');
+
+  if (!authData.user) {
+    throw new Error('Login failed');
   }
-  
-  if (user.status === 'pending') {
+
+  console.log('Auth login successful:', authData.user.id);
+
+  // Step 2: Fetch profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', authData.user.id)
+    .single();
+
+  if (profileError) {
+    console.error('Profile fetch error:', profileError);
+    await supabase.auth.signOut();
+    throw new Error('Profile not found');
+  }
+
+  console.log('Profile fetched:', profile.status, profile.role);
+
+  // Step 3: Check profile status
+  if (profile.status === 'pending') {
+    await supabase.auth.signOut();
     return { 
-      user,
+      user: authData.user,
+      profile,
       message: 'Your account is pending approval. Please wait for an admin to accept your request.'
     };
   }
-  
-  if (user.status === 'rejected') {
+
+  if (profile.status === 'rejected') {
+    await supabase.auth.signOut();
     return { 
-      user,
+      user: authData.user,
+      profile,
       message: 'Your signup request has been declined. Contact support for more information.'
     };
   }
+
+  return { user: authData.user, profile };
+}
+
+export async function loginAdminWithSupabase(credentials: UserCredentials): Promise<{ user: SupabaseUser; profile: Profile }> {
+  console.log('Starting admin login process');
   
-  return { user };
+  const { user, profile, message } = await loginWithSupabase(credentials);
+  
+  if (message) {
+    throw new Error(message);
+  }
+
+  if (profile.role !== 'admin') {
+    await supabase.auth.signOut();
+    throw new Error('Invalid admin credentials. Please try again.');
+  }
+
+  return { user, profile };
+}
+
+export async function logoutWithSupabase(): Promise<void> {
+  console.log('Logging out from Supabase');
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error('Logout error:', error);
+    throw new Error(error.message);
+  }
+}
+
+export async function getAllPendingUsersFromSupabase(): Promise<User[]> {
+  console.log('Fetching pending users from Supabase');
+  
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching pending users:', error);
+    throw new Error('Failed to fetch pending users');
+  }
+
+  return profiles.map(profileToUser);
+}
+
+export async function getAllUsersFromSupabase(): Promise<User[]> {
+  console.log('Fetching all users from Supabase');
+  
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching users:', error);
+    throw new Error('Failed to fetch users');
+  }
+
+  return profiles.map(profileToUser);
+}
+
+export async function approveUserInSupabase(userId: string): Promise<User> {
+  console.log('Approving user in Supabase:', userId);
+  
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .update({ status: 'approved' })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error approving user:', error);
+    throw new Error('Failed to approve user');
+  }
+
+  const user = profileToUser(profile);
+  toast.success(`${user.fullName} has been approved`);
+  return user;
+}
+
+export async function rejectUserInSupabase(userId: string): Promise<User> {
+  console.log('Rejecting user in Supabase:', userId);
+  
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .update({ status: 'rejected' })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error rejecting user:', error);
+    throw new Error('Failed to reject user');
+  }
+
+  const user = profileToUser(profile);
+  toast.success(`${user.fullName} has been rejected`);
+  return user;
+}
+
+// Legacy functions for backward compatibility - delegate to Supabase versions
+export async function signupUser(userData: SignupFormData): Promise<User> {
+  const { profile } = await signupWithSupabase(userData);
+  return profileToUser(profile);
+}
+
+export async function loginUser(credentials: UserCredentials): Promise<{ user: User, message?: string }> {
+  try {
+    const { profile, message } = await loginWithSupabase(credentials);
+    return { user: profileToUser(profile), message };
+  } catch (error) {
+    throw error;
+  }
 }
 
 export async function loginAdmin(credentials: UserCredentials): Promise<Admin> {
-  await delay(800); // Simulate API delay
-  
-  const admin = admins.find(admin => admin.email === credentials.email);
-  
-  if (!admin) {
-    throw new Error('Invalid admin credentials. Please try again.');
-  }
-  
-  const storedPassword = adminPasswords.get(credentials.email);
-  
-  if (storedPassword !== credentials.password) {
-    throw new Error('Invalid admin credentials. Please try again.');
-  }
-  
-  return admin;
+  const { profile } = await loginAdminWithSupabase(credentials);
+  return {
+    id: profile.id,
+    email: profile.email,
+    name: profile.full_name,
+  };
 }
 
 export async function getAllPendingUsers(): Promise<User[]> {
-  await delay(500); // Simulate API delay
-  return users.filter(user => user.status === 'pending');
+  return getAllPendingUsersFromSupabase();
 }
 
 export async function getAllUsers(): Promise<User[]> {
-  await delay(500); // Simulate API delay
-  return users;
+  return getAllUsersFromSupabase();
 }
 
 export async function approveUser(userId: string): Promise<User> {
-  await delay(800); // Simulate API delay
-  
-  const userIndex = users.findIndex(user => user.id === userId);
-  
-  if (userIndex === -1) {
-    throw new Error('User not found');
-  }
-  
-  const updatedUser = {
-    ...users[userIndex],
-    status: 'approved' as UserStatus,
-  };
-  
-  users = [
-    ...users.slice(0, userIndex),
-    updatedUser,
-    ...users.slice(userIndex + 1),
-  ];
-  
-  toast.success(`${updatedUser.fullName} has been approved`);
-  return updatedUser;
+  return approveUserInSupabase(userId);
 }
 
 export async function rejectUser(userId: string): Promise<User> {
-  await delay(800); // Simulate API delay
-  
-  const userIndex = users.findIndex(user => user.id === userId);
-  
-  if (userIndex === -1) {
-    throw new Error('User not found');
-  }
-  
-  const updatedUser = {
-    ...users[userIndex],
-    status: 'rejected' as UserStatus,
-  };
-  
-  users = [
-    ...users.slice(0, userIndex),
-    updatedUser,
-    ...users.slice(userIndex + 1),
-  ];
-  
-  toast.success(`${updatedUser.fullName} has been rejected`);
-  return updatedUser;
+  return rejectUserInSupabase(userId);
 }

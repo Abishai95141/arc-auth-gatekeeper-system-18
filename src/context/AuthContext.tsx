@@ -1,12 +1,14 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Admin, loginUser, loginAdmin, UserCredentials } from '@/services/database';
+import { User as SupabaseUser } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { Profile, UserCredentials, loginWithSupabase, loginAdminWithSupabase, logoutWithSupabase } from '@/services/database';
 import { toast } from "@/components/ui/sonner";
 
 interface AuthContextType {
-  user: User | null;
-  admin: Admin | null;
+  user: SupabaseUser | null;
+  profile: Profile | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   isAdminAuthenticated: boolean;
@@ -18,50 +20,79 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [admin, setAdmin] = useState<Admin | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check for stored auth on mount
+  // Initialize auth state and listen for changes
   useEffect(() => {
-    const storedUser = localStorage.getItem('arc_user');
-    const storedAdmin = localStorage.getItem('arc_admin');
-
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        localStorage.removeItem('arc_user');
+    console.log('Setting up auth state listener');
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
+        
+        if (session?.user) {
+          setUser(session.user);
+          
+          // Fetch profile data
+          try {
+            const { data: profileData, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (error) {
+              console.error('Error fetching profile:', error);
+              setProfile(null);
+            } else {
+              console.log('Profile loaded:', profileData.status, profileData.role);
+              setProfile(profileData);
+            }
+          } catch (error) {
+            console.error('Error fetching profile:', error);
+            setProfile(null);
+          }
+        } else {
+          setUser(null);
+          setProfile(null);
+        }
+        
+        setIsLoading(false);
       }
-    }
+    );
 
-    if (storedAdmin) {
-      try {
-        setAdmin(JSON.parse(storedAdmin));
-      } catch (e) {
-        localStorage.removeItem('arc_admin');
-      }
-    }
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.id);
+      // The onAuthStateChange will handle setting the state
+    });
 
-    setIsLoading(false);
+    return () => {
+      console.log('Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const userLogin = async (credentials: UserCredentials) => {
     setIsLoading(true);
     try {
-      const { user, message } = await loginUser(credentials);
+      console.log('User login attempt');
+      const { user: authUser, profile: userProfile, message } = await loginWithSupabase(credentials);
       
-      if (user.status === 'approved') {
-        setUser(user);
-        localStorage.setItem('arc_user', JSON.stringify(user));
+      if (userProfile.status === 'approved') {
+        // Auth state listener will handle setting user and profile
         navigate('/dashboard');
       } else {
-        // Show message for pending/rejected users but don't log them in
+        // Show message for pending/rejected users
         toast.error(message || 'Account status issue');
       }
     } catch (error) {
+      console.error('Login error:', error);
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
@@ -75,11 +106,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const adminLogin = async (credentials: UserCredentials) => {
     setIsLoading(true);
     try {
-      const adminUser = await loginAdmin(credentials);
-      setAdmin(adminUser);
-      localStorage.setItem('arc_admin', JSON.stringify(adminUser));
+      console.log('Admin login attempt');
+      const { user: authUser, profile: adminProfile } = await loginAdminWithSupabase(credentials);
+      
+      // Auth state listener will handle setting user and profile
       navigate('/admin');
     } catch (error) {
+      console.error('Admin login error:', error);
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
@@ -90,20 +123,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setAdmin(null);
-    localStorage.removeItem('arc_user');
-    localStorage.removeItem('arc_admin');
-    navigate('/login');
+  const logout = async () => {
+    console.log('Logout initiated');
+    try {
+      await logoutWithSupabase();
+      // Auth state listener will handle clearing user and profile
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force clear state even if logout fails
+      setUser(null);
+      setProfile(null);
+      navigate('/login');
+    }
   };
 
   const value = {
     user,
-    admin,
+    profile,
     isLoading,
-    isAuthenticated: !!user,
-    isAdminAuthenticated: !!admin,
+    isAuthenticated: !!user && profile?.status === 'approved',
+    isAdminAuthenticated: !!user && profile?.role === 'admin',
     userLogin,
     adminLogin,
     logout,

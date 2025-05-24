@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { signupUser, SignupFormData } from '@/services/database';
+import { signupWithSupabase, SignupFormData } from '@/services/database';
 import AuthLayout from '@/components/AuthLayout';
 import { toast } from "@/components/ui/sonner";
 
@@ -53,22 +52,25 @@ const SignupPage: React.FC = () => {
   const onSubmit = async (values: SignupFormValues) => {
     setIsSubmitting(true);
     try {
+      console.log('Starting signup process');
       const signupData: SignupFormData = {
         fullName: values.fullName,
         email: values.email,
         password: values.password,
         confirmPassword: values.confirmPassword,
-        age: values.age || 0, // Provide default value to ensure it's not undefined
+        age: values.age || 0,
         gender: values.gender,
         department: values.department,
         educationLevel: values.educationLevel,
         githubUrl: values.githubUrl,
         linkedinUrl: values.linkedinUrl
       };
-      await signupUser(signupData);
+      
+      await signupWithSupabase(signupData);
       toast.success("Sign up request submitted successfully!");
       navigate('/signup-success');
     } catch (error) {
+      console.error('Signup error:', error);
       if (error instanceof Error) {
         toast.error(error.message);
       } else {

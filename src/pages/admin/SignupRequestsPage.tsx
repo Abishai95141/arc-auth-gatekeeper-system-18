@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/components/ui/sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import AdminLayout from '@/components/AdminLayout';
-import { getAllPendingUsers, approveUser, rejectUser, User } from '@/services/database';
+import { getAllPendingUsersFromSupabase, approveUserInSupabase, rejectUserInSupabase, User } from '@/services/database';
 import { ExternalLink, Check, X } from 'lucide-react';
 
 const SignupRequestsPage: React.FC = () => {
@@ -21,9 +21,11 @@ const SignupRequestsPage: React.FC = () => {
   }, []);
 
   const fetchPendingUsers = async () => {
+    console.log('Fetching pending users');
     setIsLoading(true);
     try {
-      const users = await getAllPendingUsers();
+      const users = await getAllPendingUsersFromSupabase();
+      console.log('Pending users fetched:', users.length);
       setPendingUsers(users);
     } catch (error) {
       console.error('Error fetching pending users:', error);
@@ -54,9 +56,10 @@ const SignupRequestsPage: React.FC = () => {
   };
 
   const handleApproveUser = async (userId: string) => {
+    console.log('Approving user:', userId);
     setIsProcessing(true);
     try {
-      await approveUser(userId);
+      await approveUserInSupabase(userId);
       setPendingUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
       toast.success('User approved successfully');
     } catch (error) {
@@ -68,9 +71,10 @@ const SignupRequestsPage: React.FC = () => {
   };
   
   const handleRejectUser = async (userId: string) => {
+    console.log('Rejecting user:', userId);
     setIsProcessing(true);
     try {
-      await rejectUser(userId);
+      await rejectUserInSupabase(userId);
       setPendingUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
       toast.success('User request rejected');
     } catch (error) {
@@ -83,9 +87,10 @@ const SignupRequestsPage: React.FC = () => {
 
   const handleApproveAll = async () => {
     if (selectedUsers.size === 0) return;
+    console.log('Approving multiple users:', selectedUsers.size);
     setIsProcessing(true);
     try {
-      const promises = Array.from(selectedUsers).map(id => approveUser(id));
+      const promises = Array.from(selectedUsers).map(id => approveUserInSupabase(id));
       await Promise.all(promises);
       setPendingUsers(prevUsers => prevUsers.filter(user => !selectedUsers.has(user.id)));
       setSelectedUsers(new Set());
@@ -100,9 +105,10 @@ const SignupRequestsPage: React.FC = () => {
   
   const handleRejectAll = async () => {
     if (selectedUsers.size === 0) return;
+    console.log('Rejecting multiple users:', selectedUsers.size);
     setIsProcessing(true);
     try {
-      const promises = Array.from(selectedUsers).map(id => rejectUser(id));
+      const promises = Array.from(selectedUsers).map(id => rejectUserInSupabase(id));
       await Promise.all(promises);
       setPendingUsers(prevUsers => prevUsers.filter(user => !selectedUsers.has(user.id)));
       setSelectedUsers(new Set());
