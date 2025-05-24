@@ -94,7 +94,7 @@ const focusCircleData = [
 ];
 
 const DashboardPage: React.FC = () => {
-  const { user } = useAuth();
+  const { profile } = useAuth();
   
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -112,7 +112,7 @@ const DashboardPage: React.FC = () => {
         {/* Welcome Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
           <div>
-            <h1 className="text-3xl font-bold text-white">Welcome back, {user?.fullName}</h1>
+            <h1 className="text-3xl font-bold text-white">Welcome back, {profile?.full_name}</h1>
             <p className="text-gray-400 mt-1">Here's what's happening in your builder community</p>
           </div>
           <div className="grid grid-cols-2 gap-3 mt-4 md:mt-0">

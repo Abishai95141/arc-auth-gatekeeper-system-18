@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,20 +9,20 @@ import { Link } from 'react-router-dom';
 import { toast } from '@/components/ui/sonner';
 
 const ProfilePage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { profile, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: user?.fullName || '',
-    email: user?.email || '',
-    age: user?.age || 0,
-    gender: user?.gender || '',
-    department: user?.department || '',
-    educationLevel: user?.educationLevel || '',
-    githubUrl: user?.githubUrl || '',
-    linkedinUrl: user?.linkedinUrl || '',
+    fullName: profile?.full_name || '',
+    email: profile?.email || '',
+    age: profile?.age || 0,
+    gender: profile?.gender || '',
+    department: profile?.department || '',
+    educationLevel: profile?.education_level || '',
+    githubUrl: profile?.github_url || '',
+    linkedinUrl: profile?.linkedin_url || '',
   });
 
-  if (!user) {
+  if (!profile) {
     return null;
   }
 
