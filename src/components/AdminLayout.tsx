@@ -14,7 +14,7 @@ interface AdminLayoutProps {
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
-  const { logout, admin } = useAuth();
+  const { logout, profile } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
   const [pendingCount, setPendingCount] = useState<number | null>(null);
@@ -102,7 +102,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => 
         <div className="mt-auto pt-6">
           <div className="mb-2 flex items-center space-x-2 px-3 py-2 text-sm">
             <div className="h-6 w-6 rounded-full bg-white/20"></div>
-            <span className="text-white/80">{admin?.email}</span>
+            <span className="text-white/80">{profile?.email}</span>
           </div>
           <Button 
             variant="outline" 

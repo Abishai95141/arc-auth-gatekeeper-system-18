@@ -19,6 +19,24 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper function to safely cast Supabase data to Profile type
+function castToProfile(data: any): Profile {
+  return {
+    id: data.id,
+    full_name: data.full_name,
+    email: data.email,
+    age: data.age,
+    gender: data.gender,
+    department: data.department,
+    education_level: data.education_level,
+    github_url: data.github_url,
+    linkedin_url: data.linkedin_url,
+    status: data.status as 'pending' | 'approved' | 'rejected',
+    role: data.role as 'user' | 'admin',
+    created_at: data.created_at,
+  };
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -51,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setProfile(null);
             } else {
               console.log('Profile loaded:', profileData.status, profileData.role);
-              setProfile(profileData);
+              setProfile(castToProfile(profileData));
             }
           } catch (error) {
             console.error('Error fetching profile:', error);

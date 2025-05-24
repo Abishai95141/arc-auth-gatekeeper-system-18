@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { User as SupabaseUser } from '@supabase/supabase-js';
@@ -77,6 +78,24 @@ function profileToUser(profile: Profile): User {
   };
 }
 
+// Helper function to safely cast Supabase data to Profile type
+function castToProfile(data: any): Profile {
+  return {
+    id: data.id,
+    full_name: data.full_name,
+    email: data.email,
+    age: data.age,
+    gender: data.gender,
+    department: data.department,
+    education_level: data.education_level,
+    github_url: data.github_url,
+    linkedin_url: data.linkedin_url,
+    status: data.status as 'pending' | 'approved' | 'rejected',
+    role: data.role as 'user' | 'admin',
+    created_at: data.created_at,
+  };
+}
+
 // Supabase-based functions
 export async function signupWithSupabase(userData: SignupFormData): Promise<{ user: SupabaseUser; profile: Profile }> {
   console.log('Starting signup process with Supabase');
@@ -127,7 +146,7 @@ export async function signupWithSupabase(userData: SignupFormData): Promise<{ us
   }
 
   console.log('Profile created successfully');
-  return { user: authData.user, profile: profileResult };
+  return { user: authData.user, profile: castToProfile(profileResult) };
 }
 
 export async function loginWithSupabase(credentials: UserCredentials): Promise<{ user: SupabaseUser; profile: Profile; message?: string }> {
@@ -151,7 +170,7 @@ export async function loginWithSupabase(credentials: UserCredentials): Promise<{
   console.log('Auth login successful:', authData.user.id);
 
   // Step 2: Fetch profile
-  const { data: profile, error: profileError } = await supabase
+  const { data: profileData, error: profileError } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', authData.user.id)
@@ -163,6 +182,7 @@ export async function loginWithSupabase(credentials: UserCredentials): Promise<{
     throw new Error('Profile not found');
   }
 
+  const profile = castToProfile(profileData);
   console.log('Profile fetched:', profile.status, profile.role);
 
   // Step 3: Check profile status
@@ -227,7 +247,7 @@ export async function getAllPendingUsersFromSupabase(): Promise<User[]> {
     throw new Error('Failed to fetch pending users');
   }
 
-  return profiles.map(profileToUser);
+  return profiles.map(profile => profileToUser(castToProfile(profile)));
 }
 
 export async function getAllUsersFromSupabase(): Promise<User[]> {
@@ -243,13 +263,13 @@ export async function getAllUsersFromSupabase(): Promise<User[]> {
     throw new Error('Failed to fetch users');
   }
 
-  return profiles.map(profileToUser);
+  return profiles.map(profile => profileToUser(castToProfile(profile)));
 }
 
 export async function approveUserInSupabase(userId: string): Promise<User> {
   console.log('Approving user in Supabase:', userId);
   
-  const { data: profile, error } = await supabase
+  const { data: profileData, error } = await supabase
     .from('profiles')
     .update({ status: 'approved' })
     .eq('id', userId)
@@ -261,6 +281,7 @@ export async function approveUserInSupabase(userId: string): Promise<User> {
     throw new Error('Failed to approve user');
   }
 
+  const profile = castToProfile(profileData);
   const user = profileToUser(profile);
   toast.success(`${user.fullName} has been approved`);
   return user;
@@ -269,7 +290,7 @@ export async function approveUserInSupabase(userId: string): Promise<User> {
 export async function rejectUserInSupabase(userId: string): Promise<User> {
   console.log('Rejecting user in Supabase:', userId);
   
-  const { data: profile, error } = await supabase
+  const { data: profileData, error } = await supabase
     .from('profiles')
     .update({ status: 'rejected' })
     .eq('id', userId)
@@ -281,6 +302,7 @@ export async function rejectUserInSupabase(userId: string): Promise<User> {
     throw new Error('Failed to reject user');
   }
 
+  const profile = castToProfile(profileData);
   const user = profileToUser(profile);
   toast.success(`${user.fullName} has been rejected`);
   return user;
